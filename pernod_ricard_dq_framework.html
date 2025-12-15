@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pernod Ricard - Framework Data Quality avec dbt</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #632ff5 0%, #ff6803 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #632ff5 0%, #ff6803 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 3px solid #e0e0e0;
+            background: #f5f5f5;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            min-width: 150px;
+        }
+        
+        .tab-btn:hover {
+            background: #efefef;
+            color: #ff6803;
+        }
+        
+        .tab-btn.active {
+            color: #632ff5;
+            border-bottom-color: #632ff5;
+            background: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #ff6803;
+        }
+        
+        .stage-box {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .stage-box:hover {
+            border-color: #632ff5;
+            box-shadow: 0 5px 15px rgba(99, 47, 245, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .stage-box h3 {
+            color: #632ff5;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stage-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #632ff5 0%, #ff6803 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .issue-box {
+            background: #fff3cd;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .benefit-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .process-flow {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-item {
+            background: #f0f0f0;
+            padding: 15px 20px;
+            border-radius: 6px;
+            border: 2px solid #632ff5;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #ff6803;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        
+        .comparison-table thead {
+            background: #f5f5f5;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table th {
+            font-weight: 600;
+            color: #632ff5;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .current {
+            background: #ffe6e6;
+        }
+        
+        .future {
+            background: #e6f2ff;
+        }
+        
+        .tools-list {
+            list-style: none;
+            margin: 12px 0;
+        }
+        
+        .tools-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tools-list li:before {
+            content: "→ ";
+            color: #632ff5;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .tab-btn {
+                min-width: 120px;
+                padding: 12px;
+                font-size: 0.85em;
+            }
+        }
+        
+        .stakeholder-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #ff6803;
+            margin-bottom: 10px;
+        }
+        
+        .stakeholder-card strong {
+            color: #632ff5;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .footer {
+            background: #f5f5f5;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+
+        a {
+            color: #632ff5;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #ff6803;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍷 Pernod Ricard - Framework Data Quality</h1>
+            <p>Gouvernance de la qualité des données avec dbt | Plateforme Codex</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('current-state')">État Actuel</button>
+            <button class="tab-btn" onclick="switchTab('challenges')">Enjeux</button>
+            <button class="tab-btn" onclick="switchTab('dbt-solution')">Solution dbt</button>
+            <button class="tab-btn" onclick="switchTab('new-process')">Nouveau Processus</button>
+            <button class="tab-btn" onclick="switchTab('governance')">Gouvernance</button>
+            <button class="tab-btn" onclick="switchTab('implementation')">Roadmap</button>
+        </div>
+
+        <!-- TAB 1: CURRENT STATE -->
+        <div id="current-state" class="tab-content active">
+            <h2 class="section-title">État Actuel chez Pernod Ricard</h2>
+            
+            <div class="stage-box">
+                <h3><span class="stage-icon">1</span> Infrastructure Technique</h3>
+                <ul class="tools-list">
+                    <li><strong>Plateforme Codex:</strong> Snowflake + Azure + dbt Core (depuis 7 mois)</li>
+                    <li><strong>BI/Restitution:</strong> Power BI</li>
+                    <li><strong>Architecture:</strong> Médaillon (Bronze/Silver/Gold) - Landing → Staging → Mart</li>
+                    <li><strong>Orchestration:</strong> Procédures Snowflake + dbt</li>
+                    <li><strong>Projet LIP (critique):</strong> Globalisation données - unifier CRM, GDE, ERP et autres systèmes en un seul système central</li>
+                </ul>
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">2</span> Organisation Actuelle</h3>
+                <p><strong>Data Platform Squad:</strong> Fournit les enablers pour un delivery plus rapide</p>
+                <p><strong>Domain-based squads:</strong> ~10 équipes par domaine (supply chain, marketing, sales, etc.)</p>
+                <p><strong>Chapters:</strong> Groupes transversaux (Archi, Data Arch) qui définissent les guidelines</p>
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">3</span> État Actuel de la Qualité de Données</h3>
+                <p style="margin-bottom: 10px;"><strong>État:</strong> Fragmentation totale ❌</p>
+                <ul class="tools-list">
+                    <li>Initiatives silotées par équipe - aucune solution globale</li>
+                    <li>Mix disparate: scripts ad-hoc, procédures stockées, processus dbt isolés</li>
+                    <li>Quelques équipes font du profiling/monitoring technique uniquement</li>
+                    <li>Aucun framework ou guideline appliqué</li>
+                    <li>Pas d'outils user-friendly pour le métier</li>
+                    <li>Responsabilités éparpillées entre ingestion, transformation, data stewards</li>
+                </ul>
+            </div>
+
+            <div class="issue-box">
+                <strong>❌ Conséquence:</strong> Le métier rejette la responsabilité de la qualité car pas d'outil accessible. Les équipes techniques font du minimum (vérification technique, pas de règles métier).
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">4</span> Projet LIP: Catalyseur pour la Data Quality</h3>
+                <p><strong>🚀 Projet de Globalisation Critère:</strong></p>
+                <ul class="tools-list">
+                    <li>Unifier tous les CRM, ERP, GDE et systèmes métier dispersés</li>
+                    <li>Consolider les données d'acquisitions multiples en un système cohérent</li>
+                    <li>IMPACT: Énorme volume de données en migration</li>
+                    <li><strong>Dépendance critique:</strong> La qualité de la migration dépend de la qualité des contrôles</li>
+                    <li>Window stratégique: C'est le moment d'implémenter une gouvernance de qualité AVANT la migration</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Connexion à Data Quality:</strong> Si on ne standardise pas la qualité maintenant, le projet LIP va propager les mêmes problèmes à l'échelle de toute l'organisation.</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: CHALLENGES -->
+        <div id="challenges" class="tab-content">
+            <h2 class="section-title">Enjeux Identifiés</h2>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">1</span> Contexte: Acquisitions Multiples</h3>
+                <p>Pernod Ricard s'est construit par acquisitions successives → chaque marque/acquisition a ses propres processus, systèmes, et données disparates.</p>
+                <p style="margin-top: 10px;"><strong>Résultat:</strong> Données très hétérogènes, no common language, confusion au reporting et difficultés de consolidation.</p>
+                <p style="margin-top: 10px;"><strong>Problème aggravé par:</strong> Absence d'harmonisation des définitions métier entre entités (ex: même "revenu" ne signifie pas la même chose partout)</p>
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">2</span> Pourquoi Agir Maintenant? (Timing Stratégique)</h3>
+                <p><strong>Window d'opportunité critique:</strong></p>
+                <ul class="tools-list">
+                    <li><strong>Plateforme jeune (7 mois):</strong> Codex n'est pas encore ossifiée → excellent timing pour standardiser dès le départ</li>
+                    <li><strong>Équipes en construction (< 1 an):</strong> Squads métier naissent - absorber bonnes pratiques dès la genèse</li>
+                    <li><strong>Projet LIP imminent:</strong> Grande migration de données = moment critique pour valider la qualité AVANT migration</li>
+                    <li><strong>Éviter la reproduction:</strong> Ne pas perpétuer les problèmes du passé (silotage, disparate tooling) dans la nouvelle plateforme</li>
+                </ul>
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">3</span> 4 Grands Besoins de Data Quality</h3>
+                <p><strong>🔍 Profiling:</strong> Comprendre avec quelles données on travaille (structure, contenu, distributions)</p>
+                <p style="margin-top: 10px;"><strong>📊 Observation:</strong> Suivre l'évolution de la donnée à travers SON CYCLE DE VIE complet</p>
+                <ul style="margin-left: 40px; margin-top: 5px;">
+                    <li>Depuis l'ingestion (source systems)</li>
+                    <li>À travers les transformations (staging → mart)</li>
+                    <li>Jusqu'à l'archivage ou suppression</li>
+                    <li>Sur différents niveaux (row-level, column-level, aggregate)</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>🚨 Monitoring & Alerting:</strong> Détecter et anticiper les problèmes</p>
+                <ul style="margin-left: 40px; margin-top: 5px;">
+                    <li>Identifier rapidement les anomalies</li>
+                    <li>Prévenir en amont les impacts downstream (dashboards, rapports)</li>
+                    <li>Alerter les responsables immédiatement</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>📈 Indice de Confiance:</strong> Fournir un score de qualité aux utilisateurs finaux</p>
+                <ul style="margin-left: 40px; margin-top: 5px;">
+                    <li>Métrique consolidée de santé de la donnée</li>
+                    <li>Transparent dans dbt Catalog/Exposures</li>
+                    <li>Communiquer trust vs. risk aux métiers</li>
+                </ul>
+            </div>
+
+            <div class="issue-box">
+                <strong>🎯 Besoin Additionnel:</strong> Un <strong>score de qualité / indice de confiance</strong> pour montrer aux utilisateurs que leur donnée est fiable.
+            </div>
+
+            <h3 style="margin-top: 30px; color: #632ff5;">Deux Aspects Importants:</h3>
+            
+            <div style="margin-top: 15px;">
+                <p><strong>1️⃣ Data Quality (volet technique):</strong></p>
+                <p style="margin-left: 20px;">Vérifier que la donnée respecte les règles métier (ex: date_départ > date_arrivée, pas de valeurs impossibles)</p>
+                <p style="margin-left: 20px;">Bloquant pour pipeline si problème → prévention d'erreurs en production</p>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <p><strong>2️⃣ Data Governance (volet organisation):</strong></p>
+                <p style="margin-left: 20px;">Harmonisation des métriques (même définition de "revenu" finance vs marketing)</p>
+                <p style="margin-left: 20px;">↳ Ceci est confié à l'équipe Data Governance (pas data quality)</p>
+            </div>
+        </div>
+
+        <!-- TAB 3: DBT SOLUTION -->
+        <div id="dbt-solution" class="tab-content">
+            <h2 class="section-title">Comment dbt Répond aux Enjeux</h2>
+
+            <h3 style="margin-top: 20px; color: #333;">1. Testing Framework Standardisé</h3>
+            <p>dbt offre un framework cohérent pour tester la qualité à chaque étape:</p>
+            <ul class="tools-list">
+                <li><strong>Generic Tests (YAML):</strong> unique, not_null, relationships, accepted_values (simple et réutilisable)</li>
+                <li><strong>Custom Data Tests:</strong> Règles métier spécifiques (SQL queries)</li>
+                <li><strong>Unit Tests:</strong> Valider la logique des transformations avant prod</li>
+                <li><strong>Source Freshness:</strong> Monitorer que les données sources arrivent à temps</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #333;">2. dbt Copilot pour Accélération</h3>
+            <p>Opportunité intéressante: <strong>AI-powered test generation</strong></p>
+            <ul class="tools-list">
+                <li>Les chapters/data stewards décrivent la règle en language naturel</li>
+                <li>Copilot traduit en YAML config → génère tests automatiquement</li>
+                <li>Réduit le time-to-value, systématise la façon de rédire les tests</li>
+                <li>✅ Zéro exposure données (metadata only, pas d'entraînement sur vos données)</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #333;">3. Profiling & Monitoring</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Avant (Ad-hoc)</th>
+                        <th>Avec dbt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Profiling</strong></td>
+                        <td class="current">Scripts SQL manually</td>
+                        <td class="future">dbt docs + column-level metadata</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Monitoring</strong></td>
+                        <td class="current">Aucun (découvert par users)</td>
+                        <td class="future">dbt tests run regularly + alertes Slack</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Observability</strong></td>
+                        <td class="current">Aucune (unknown dependencies)</td>
+                        <td class="future">DAG lineage + impact analysis (what breaks downstream?)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quality Score</strong></td>
+                        <td class="current">N/A</td>
+                        <td class="future">Custom scoring (test pass rate, coverage %, SLA compliance)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 20px; color: #333;">4. Integration dans le DAG dbt</h3>
+            <div class="process-flow">
+                <div class="flow-item">Sources</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">Tests Freshness</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">Staging (dbt)</div>
+            </div>
+            <div class="process-flow">
+                <div class="flow-item">Tests Raw Data</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">Transformations</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">Tests Business Logic</div>
+            </div>
+            <div class="process-flow">
+                <div class="flow-item">Mart Models</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">Tests + Monitoring</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item">BI (Power BI)</div>
+            </div>
+            <p style="margin-top: 15px;"><strong>Les tests s'exécutent à chaque build:</strong> CI/CD bloque les mauvaises transformations avant prod.</p>
+
+            <h3 style="margin-top: 20px; color: #333;">5. Communication de la Qualité</h3>
+            <p><strong>dbt Exposures + Catalog:</strong> Montrer au métier quels dashboards/rapports dépendent de quels modèles</p>
+            <p style="margin-left: 20px;">Si test fail → alerter TOUS les stakeholders affectés (pas juste les data engineers)</p>
+        </div>
+
+        <!-- TAB 4: NEW PROCESS -->
+        <div id="new-process" class="tab-content">
+            <h2 class="section-title">Nouveau Processus avec dbt</h2>
+
+            <h3 style="margin-top: 20px; color: #333;">Flow End-to-End avec Responsabilités</h3>
+            <div style="margin-bottom: 20px;">
+                <div class="flow-item" style="margin-bottom: 10px;">1️⃣ Besoin Métier Exprimé</div>
+                <div style="margin-left: 40px; margin-bottom: 15px;"><strong>Par:</strong> Data Product Owners → Articulent nouveaux data products, features métier</div>
+
+                <div class="flow-item" style="margin-bottom: 10px;">2️⃣ Data Engineers Développent Modèles</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Créent nouvelles tables, models dbt, transformations</div>
+                <div style="margin-left: 40px; margin-bottom: 15px;">→ Documentent le modèle et les colonnes dans dbt</div>
+
+                <div class="flow-item" style="margin-bottom: 10px;">3️⃣ Gouvernance + Data Owners Définissent les Règles</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Collaboration: data producer + data governance + data stewards</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Discuter les règles de qualité métier</div>
+                <div style="margin-left: 40px; margin-bottom: 15px;">→ Quels tests? Accepté_values? Relationships? Rules métier spécifiques?</div>
+
+                <div class="flow-item" style="margin-bottom: 10px;">4️⃣ Data Engineers Implémentent Tests (dbt)</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Ajouter tests à YAML (ou utiliser Copilot pour générer)</div>
+                <div style="margin-left: 40px; margin-bottom: 15px;">→ Tests tournent à chaque run, CI/CD valide PRs avant prod</div>
+
+                <div class="flow-item" style="margin-bottom: 10px;">5️⃣ Monitoring Continu + Alerting</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ dbt exécute tests régulièrement (ex: chaque nuit après refresh)</div>
+                <div style="margin-left: 40px; margin-bottom: 15px;">→ Si test fail: <strong>alerter DATA PRODUCT OWNERS + DATA OWNERS</strong> (pas juste engineers)</div>
+
+                <div class="flow-item" style="margin-bottom: 10px;">6️⃣ Incident Management & Root Cause</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Data Owner/Steward valide si c'est VRAIMENT une erreur</div>
+                <div style="margin-left: 40px; margin-bottom: 10px;">→ Root cause analysis: code error? Source data changed? Schema evolution? Règle métier changée?</div>
+                <div style="margin-left: 40px;">→ Fix (code dbt, source data, ou règle métier) + prevent future occurrences</div>
+            </div>
+
+            <h3 style="margin-top: 20px; color: #333;">Architecture Médaillon & Testing Strategy</h3>
+            <p><strong>Codex utilise l'architecture Bronze → Silver → Gold</strong></p>
+            <p style="margin-top: 10px;"><strong>🔴 BRONZE (Raw/Landing):</strong> Données brutes des sources</p>
+            <ul style="margin-left: 40px; margin-top: 5px;">
+                <li>Tests: Source freshness, row count validation, schema checks</li>
+                <li>Objectif: Assurer que les données arrivent à temps et complètes</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>🟡 SILVER (Staging/Transformation):</strong> Données nettoyées et enrichies</p>
+            <ul style="margin-left: 40px; margin-top: 5px;">
+                <li>Tests: Data integrity (no nulls clés), deduplication, data type checks</li>
+                <li>Tests: Relationships entre tables, accepted_values</li>
+                <li>Objectif: Valider transformations, prévenir fan-outs/joins manqués</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>🟢 GOLD (Mart/Analytics):</strong> Modèles finaux pour BI</p>
+            <ul style="margin-left: 40px; margin-top: 5px;">
+                <li>Tests: Règles métier complexes (calculs, agrégations, validations)</li>
+                <li>Tests: Cohérence avec définitions métier (revenue, customer, etc.)</li>
+                <li>Objectif: Assurer confiance pour décisions business</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #333;">Couches de Tests dans Codex</h3>
+            <div class="grid-2">
+                <div class="stage-box">
+                    <h4>🔴 Raw/Landing (Bronze)</h4>
+                    <p>Tests sur source freshness, basic profiling</p>
+                </div>
+                <div class="stage-box">
+                    <h4>🟡 Staging (Silver)</h4>
+                    <p>Tests d'intégrité données, transformations basiques</p>
+                </div>
+                <div class="stage-box">
+                    <h4>🟢 Mart Models (Gold)</h4>
+                    <p>Tests de règles métier, relationships, accepté_values</p>
+                </div>
+                <div class="stage-box">
+                    <h4>📊 BI Layer (Power BI)</h4>
+                    <p>Metrics consistency (via dbt Semantic Layer)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: GOVERNANCE -->
+        <div id="governance" class="tab-content">
+            <h2 class="section-title">Gouvernance & Organisation</h2>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">1</span> Qui Définit Quoi?</h3>
+                <p><strong>Chapters (Guilds):</strong></p>
+                <ul class="tools-list">
+                    <li>Regroupe tous les Data Engineers / Data Architects des différentes squads</li>
+                    <li>Réunions hebdos pour discuter guidelines, bonnes pratiques</li>
+                    <li>Proposent des standards à appliquer de manière top-down</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Data Governance Team:</strong></p>
+                <ul class="tools-list">
+                    <li>Travaille avec data owners pour DÉFINIR les règles métier</li>
+                    <li>Valide les règles de qualité proposées par squads</li>
+                    <li>Propriétaires de la harmonisation des définitions (sémantique)</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Data Engineers (par squad):</strong></p>
+                <ul class="tools-list">
+                    <li>Implémentent les règles en tant que tests dbt</li>
+                    <li>Exécutent et monitorer les tests</li>
+                </ul>
+            </div>
+
+            <div class="stage-box">
+                <h3><span class="stage-icon">2</span> Approche Recommandée: Commencer par un Pilot</h3>
+                <p><strong>Pourquoi?</strong> Éviter de se perdre dans la complexité org/admin.</p>
+                <p><strong>Pilot Scope:</strong></p>
+                <ul class="tools-list">
+                    <li>Choisir 1-2 data products pilot (ex: CRM, Supply Chain)</li>
+                    <li>Implémenter le full workflow quality avec dbt</li>
+                    <li>Montrer ROI, bonnes pratiques, quick wins</li>
+                    <li>Ensuite sistématiser et scaler aux autres squads</li>
+                </ul>
+            </div>
+
+            <div class="benefit-box">
+                <strong>✅ Avantage:</strong> Les chapters peuvent définir les guidelines (bonnes pratiques, architecture), mais les règles métier spécifiques viennent des data product owners + gouvernance. Chaque squad reste agile sur son produit tout en respectant les standards.
+            </div>
+
+            <h3 style="margin-top: 30px; color: #333;">Rôles Clés</h3>
+            <div class="stakeholder-card">
+                <strong>Laurent Girardeau (Data Quality Project Owner)</strong>
+                Data Quality Project Owner depuis 8 mois - Trouver solutions, piloter implémentation, assurer l'adoption
+            </div>
+            <div class="stakeholder-card">
+                <strong>Data Stewards / Product Owners</strong>
+                Identifier règles métier, valider qualité, alerter métier en cas d'incident
+            </div>
+            <div class="stakeholder-card">
+                <strong>Data Engineers</strong>
+                Implémenter & exécuter tests, fixer bugs data
+            </div>
+            <div class="stakeholder-card">
+                <strong>Métier / BI Users</strong>
+                Recevoir alerts, agir si données impactées, feedback sur quality
+            </div>
+        </div>
+
+        <!-- TAB 6: IMPLEMENTATION -->
+        <div id="implementation" class="tab-content">
+            <h2 class="section-title">Roadmap Implémentation</h2>
+
+            <h3 style="margin-top: 20px; color: #333;">Phase 1: Fondations (Mois 1-2)</h3>
+            <div class="stage-box">
+                <p>✓ Définir taxonomy de données quality (le "DOG" - Distinctiveness, Ownership, Governance)</p>
+                <p>✓ Standardiser format tests dbt (YAML structure, naming conventions)</p>
+                <p>✓ Créer templates dbt pour profiling, monitoring, alerting</p>
+                <p>✓ Sélectionner 1-2 data products PILOT</p>
+                <p>✓ Training équipes sur dbt testing + data quality concepts</p>
+            </div>
+
+            <h3 style="margin-top: 20px; color: #333;">Phase 2: Pilot Implementation (Mois 2-4)</h3>
+            <div class="stage-box">
+                <p>✓ Implémenter tests complets sur pilot data products</p>
+                <p>✓ Definir règles de qualité métier (avec data stewards + governance)</p>
+                <p>✓ Setup monitoring & alerting infrastructure (Slack, emails)</p>
+                <p>✓ Documenter models et data dans dbt Catalog</p>
+                <p>✓ Tester Copilot (if dbt Enterprise) pour test generation</p>
+            </div>
+
+            <h3 style="margin-top: 20px; color: #333;">Phase 3: Chapters Guidelines (Mois 3-5)</h3>
+            <div class="stage-box">
+                <p>✓ Capitaliser sur learnings du pilot</p>
+                <p>✓ Chapters définissent DQ guidelines standards</p>
+                <p>✓ Créer reusable test macros + packages</p>
+                <p>✓ Définir quality SLAs par type de donnée</p>
+                <p>✓ Training wider squad membership</p>
+            </div>
+
+            <h3 style="margin-top: 20px; color: #333;">Phase 4: Scale-out (Mois 5+)</h3>
+            <div class="stage-box">
+                <p>✓ Rollout à toutes les squads/domaines</p>
+                <p>✓ Intégrer QA testing dans CI/CD pipelines</p>
+                <p>✓ Dashboard de data quality (show test health, SLA compliance)</p>
+                <p>✓ Feedback loops: métier → governance → data engineers</p>
+                <p>✓ Optimiser & refine processes based on usage</p>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #333;">Succès Metrics</h3>
+            <div class="grid-2">
+                <div class="stage-box">
+                    <p><strong>Technique:</strong></p>
+                    <ul class="tools-list">
+                        <li>100% des modèles golden ont des tests</li>
+                        <li>Test coverage > 80%</li>
+                        <li>MTTR (mean time to recovery) < 1 heure</li>
+                        <li>Zero data quality incidents reaching BI users</li>
+                    </ul>
+                </div>
+                <div class="stage-box">
+                    <p><strong>Business:</strong></p>
+                    <ul class="tools-list">
+                        <li>Adoption: % of squads using dbt tests</li>
+                        <li>Trust: Data quality feedback from métier</li>
+                        <li>Velocity: Faster deployments (tests prevent regressions)</li>
+                        <li>Harmonization: Common quality standards across org</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #333;">Ressources Supplémentaires dbt</h3>
+            <p><strong>Documentation & Learning:</strong></p>
+            <ul class="tools-list">
+                <li>dbt docs: <a href="https://docs.getdbt.com" target="_blank">docs.getdbt.com</a> - Data Testing section</li>
+                <li>dbt Learn: Free courses on dbt testing best practices</li>
+                <li>dbt packages: dbt_expectations, great_expectations integration</li>
+                <li>dbt Copilot: Available for Enterprise+ (AI-assisted test generation)</li>
+            </ul>
+
+            <div class="benefit-box" style="margin-top: 20px;">
+                <strong>💡 Considération:</strong> dbt Cloud Enterprise offre des features avancées (Copilot, Extended documentation, advanced scheduler, etc.). Pour Pernod Ricard à l'échelle, ça vaudrait le coup d'explorer.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
