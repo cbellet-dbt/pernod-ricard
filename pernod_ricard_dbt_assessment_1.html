@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluation Technique dbt - Pernod Ricard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #fd6603 0%, #7b2de4 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(253, 102, 3, 0.15);
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        header .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        header .meta {
+            font-size: 0.95em;
+            opacity: 0.85;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* NAVIGATION */
+        nav {
+            background: white;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            display: block;
+            padding: 18px 20px;
+            color: #fd6603;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-icon {
+            font-size: 1.2em;
+            display: inline-block;
+        }
+
+        nav a:hover, nav a.active {
+            background: #fff3e0;
+            border-bottom-color: #fd6603;
+        }
+
+        /* MAIN CONTENT */
+        main {
+            padding: 40px;
+        }
+
+        section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin: 40px 0 30px 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #fd6603;
+        }
+
+        .subsection-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin: 30px 0 20px 0;
+            padding-left: 15px;
+            border-left: 4px solid #fd6603;
+        }
+
+        /* CARDS */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-color: #fd6603;
+        }
+
+        .card h3 {
+            color: #fd6603;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .card p {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        /* ISSUE BOXES */
+        .issue-box {
+            background: #fff3e0;
+            border-left: 4px solid #fd6603;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            color: #333;
+        }
+
+        .issue-box.critical {
+            background: #fce4ec;
+            border-left-color: #d32f2f;
+            color: #c62828;
+        }
+
+        .issue-box.success {
+            background: #e8f5e9;
+            border-left-color: #2e7d32;
+            color: #1b5e20;
+        }
+
+        /* COMPARISON */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .before, .after {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .before h4 {
+            color: #d32f2f;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .after h4 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-icon {
+            font-size: 1.5em;
+        }
+
+        /* TABLES */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .comparison-table thead {
+            background: linear-gradient(135deg, #fd6603 0%, #7b2de4 100%);
+            color: white;
+        }
+
+        .comparison-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        /* HIGHLIGHT BOXES */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(253, 102, 3, 0.05) 0%, rgba(123, 45, 228, 0.05) 100%);
+            border-left: 4px solid #fd6603;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+
+        .highlight-box h4 {
+            color: #fd6603;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        /* ROI METRICS */
+        .roi-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .roi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            border-top: 4px solid #fd6603;
+        }
+
+        .roi-card .value {
+            font-size: 2.2em;
+            color: #fd6603;
+            font-weight: 700;
+            margin: 15px 0;
+        }
+
+        .roi-card .label {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        /* TIMELINE */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 30px;
+            width: 2px;
+            height: 100%;
+            background: #fd6603;
+        }
+
+        .timeline-item:last-child:before {
+            display: none;
+        }
+
+        .timeline-dot {
+            width: 32px;
+            height: 32px;
+            background: #fd6603;
+            border-radius: 50%;
+            margin-right: 30px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .timeline-content h4 {
+            color: #fd6603;
+            margin-bottom: 8px;
+        }
+
+        /* CASE STUDY BOX */
+        .case-study {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            border-left: 4px solid #061ee7;
+        }
+
+        .case-study h4 {
+            color: #061ee7;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .case-study .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .metric-item {
+            color: #666;
+        }
+
+        .metric-item .value {
+            color: #fd6603;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #fd6603 0%, #7b2de4 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(253, 102, 3, 0.3);
+        }
+
+        /* LISTS */
+        ul {
+            margin-left: 20px;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2em; }
+            header .subtitle { font-size: 1em; }
+            .section-title { font-size: 1.8em; }
+            nav a { padding: 12px 12px; font-size: 0.8em; }
+            main { padding: 20px; }
+            .comparison-container { grid-template-columns: 1fr; }
+        }
+
+        /* ARCHITECTURE DIAGRAM */
+        .architecture-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin: 30px 0;
+        }
+
+        .architecture-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .arch-block {
+            background: linear-gradient(135deg, #fd6603 0%, #7b2de4 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 140px;
+            font-weight: 600;
+        }
+
+        .arch-block.source {
+            background: #2196F3;
+        }
+
+        .arch-block.transform {
+            background: linear-gradient(135deg, #fd6603 0%, #7b2de4 100%);
+        }
+
+        .arch-block.consume {
+            background: #4CAF50;
+        }
+
+        .arch-arrow {
+            font-size: 2em;
+            color: #ccc;
+        }
+
+        /* STAKEHOLDER TABLE */
+        .stakeholder-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .stakeholder-table th, .stakeholder-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stakeholder-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stakeholder-table tr:hover {
+            background: #fafafa;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .role-badge.tech { background: #e3f2fd; color: #1565c0; }
+        .role-badge.business { background: #fff3e0; color: #e65100; }
+        .role-badge.gov { background: #f3e5f5; color: #7b1fa2; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Évaluation Technique dbt</h1>
+        <div class="subtitle">Pernod Ricard - Plateforme Codex</div>
+        <div class="meta">
+            <span>📊 Analyse Complète</span>
+            <span>🔧 dbt Labs</span>
+            <span>📅 Janvier 2025 - Mis à jour après démo du 28/01</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a class="nav-link active" onclick="showSection(event, 'executive')"><span class="nav-icon">📋</span> Synthèse</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'context')"><span class="nav-icon">📍</span> Contexte</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'actual')"><span class="nav-icon">⚠️</span> État Actuel</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'future')"><span class="nav-icon">🚀</span> État Cible</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'solution')"><span class="nav-icon">🔧</span> Solution dbt</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'roi')"><span class="nav-icon">💰</span> ROI</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'cases')"><span class="nav-icon">📚</span> Références</a></li>
+            <li><a class="nav-link" onclick="showSection(event, 'roadmap')"><span class="nav-icon">🗺️</span> Feuille de Route</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- SECTION 1: EXECUTIVE SUMMARY -->
+        <section id="executive" class="active">
+            <h2 class="section-title">📋 Synthèse Exécutive</h2>
+
+            <div class="highlight-box">
+                <h4>Contexte Stratégique</h4>
+                <p>Pernod Ricard est en pleine phase de transformation data avec la construction de la plateforme <strong>Codex</strong> sur Snowflake et Azure. Cette plateforme, lancée il y a moins de 7 mois, a vocation à devenir la plateforme data transverse du groupe, remplaçant les 11 plateformes existantes à travers le monde. Le groupe utilise déjà <strong>dbt Core</strong> pour ~70% de ses transformations, avec une communauté d'environ 100 data engineers répartis dans différentes squads.</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>💡 Opportunité</h3>
+                    <p>Standardiser la qualité des données à l'échelle du groupe et industrialiser la stratégie Data Product, en capitalisant sur l'adoption existante de dbt Core et la modernité de la stack Codex.</p>
+                </div>
+                <div class="card">
+                    <h3>🎯 Solution</h3>
+                    <p>Migrer vers <strong>dbt Cloud</strong> pour unifier les pratiques de transformation, de tests et de documentation, tout en apportant une visibilité end-to-end sur les Data Products.</p>
+                </div>
+                <div class="card">
+                    <h3>💰 Impact Business</h3>
+                    <p>Réduction des coûts Snowflake (15-60% via Smart Execution), amélioration de la productivité des équipes, et établissement d'un framework de qualité unifié pour le projet LEAP.</p>
+                </div>
+            </div>
+
+            <div class="roi-metrics">
+                <div class="roi-card">
+                    <div class="label">Data Engineers</div>
+                    <div class="value">~100</div>
+                    <div class="label">utilisateurs dbt Core</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Adoption dbt</div>
+                    <div class="value">70%</div>
+                    <div class="label">des transformations</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Plateformes Legacy</div>
+                    <div class="value">11</div>
+                    <div class="label">à consolider</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Économies FinOps</div>
+                    <div class="value">15-60%</div>
+                    <div class="label">réduction compute</div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Recommandation</h4>
+                <p>Démarrer par un <strong>Business Value Assessment</strong> pour quantifier précisément les gains de la migration dbt Core → dbt Cloud, suivi d'un pilote sur un domaine métier prioritaire (ex: CRM dans le cadre du projet LEAP).</p>
+            </div>
+
+            <div class="issue-box success">
+                <strong>🎯 Démo du 28 Janvier - Points Clés Retenus</strong><br><br>
+                <ul style="margin-left: 15px;">
+                    <li><strong>Health Check intégré :</strong> Visibilité qualité directement dans les dashboards métier</li>
+                    <li><strong>Column-Level Lineage :</strong> Compréhension fine des dépendances pour éviter les erreurs</li>
+                    <li><strong>Compare :</strong> Validation des changements de données avant merge</li>
+                    <li><strong>Smart Execution :</strong> ~29% d'économies Snowflake en moyenne</li>
+                    <li><strong>IDE Web :</strong> Onboarding immédiat des externes (50-70% de l'équipe)</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Prochaine étape :</strong> Debrief le 3 février pour discuter modèle de coût et potentiel pilote</p>
+            </div>
+        </section>
+
+        <!-- SECTION 2: CONTEXT -->
+        <section id="context">
+            <h2 class="section-title">📍 Contexte & Organisation</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🏢 Organisation Data</h3>
+                    <p><strong>Équipe Data Platform (Codex) :</strong> Développe les enablers transverses</p>
+                    <p><strong>Squads Produits :</strong> ~10 équipes par domaine métier (portfolios)</p>
+                    <p><strong>Chapters :</strong> Archi & DataArch définissent les guidelines transverses</p>
+                    <p><strong>Data Engineers :</strong> ~100 répartis dans les squads</p>
+                    <p><strong>Ratio Internes/Externes :</strong> 30-50% internes, 50-70% consultants externes selon les projets</p>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Stack Technique Codex</h3>
+                    <p><strong>Data Warehouse :</strong> Snowflake sur Azure</p>
+                    <p><strong>Transformation :</strong> dbt Core (70%) + Proc Stockées Snowflake (30%)</p>
+                    <p><strong>Orchestration :</strong> Azure Data Factory (ADF)</p>
+                    <p><strong>BI :</strong> Power BI</p>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Vision Data Product</h3>
+                    <p><strong>Architecture :</strong> Source Align → Data Hub → Use Case Align</p>
+                    <p><strong>Principe :</strong> Blocs atomiques avec infra, orchestration et qualité dédiés</p>
+                    <p><strong>Objectif :</strong> Éviter les interdépendances (pas de "spaghetti pass")</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Architecture Data Product</h3>
+            <div class="architecture-box">
+                <p style="margin-bottom: 20px; color: #666;">Pernod Ricard a adopté une architecture en <strong>Data Products</strong> plutôt qu'un simple Bronze/Silver/Gold global, pour éviter les interdépendances non maîtrisées.</p>
+                <div class="architecture-flow">
+                    <div class="arch-block source">
+                        <div style="font-size: 1.5em; margin-bottom: 5px;">📥</div>
+                        Source Align
+                        <div style="font-size: 0.8em; opacity: 0.9;">Point d'entrée unique</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block transform">
+                        <div style="font-size: 1.5em; margin-bottom: 5px;">🔄</div>
+                        Data Hub
+                        <div style="font-size: 0.8em; opacity: 0.9;">Modèles agnostiques</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block consume">
+                        <div style="font-size: 1.5em; margin-bottom: 5px;">📊</div>
+                        Use Case Align
+                        <div style="font-size: 0.8em; opacity: 0.9;">Orienté métier</div>
+                    </div>
+                </div>
+                <div class="issue-box success" style="margin-top: 20px;">
+                    <strong>Point clé :</strong> Le Bronze/Silver/Gold existe <em>à l'intérieur</em> de chaque Data Product, pas au niveau de la plateforme globale. Cela limite les dépendances croisées entre projets.
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Projets Stratégiques</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🚀 Projet LEAP</h3>
+                    <p><strong>Scope :</strong> Migration ERP vers SAP + globalisation des systèmes (CRM, JDE, etc.)</p>
+                    <p><strong>Enjeu :</strong> Harmoniser les données disparates issues des acquisitions</p>
+                    <p><strong>Impact Data Quality :</strong> Besoin critique de valider la qualité à la source</p>
+                </div>
+                <div class="card">
+                    <h3>📊 Plateforme Codex</h3>
+                    <p><strong>Âge :</strong> < 7 mois en production</p>
+                    <p><strong>Ambition :</strong> Remplacer les 11 plateformes legacy existantes</p>
+                    <p><strong>Défi :</strong> Construire les enablers et standards en parallèle du delivery</p>
+                </div>
+                <div class="card">
+                    <h3>🔍 Data Quality Framework</h3>
+                    <p><strong>Besoin :</strong> Profiling, monitoring, alerting, observabilité, score de confiance</p>
+                    <p><strong>Responsable :</strong> Laurent Girardeau Montaut (Data Quality PO - nouveau poste)</p>
+                    <p><strong>État :</strong> Initiatives disparates à unifier</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Parties Prenantes Identifiées</h3>
+            <table class="stakeholder-table">
+                <thead>
+                    <tr>
+                        <th>Rôle</th>
+                        <th>Nom</th>
+                        <th>Responsabilité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="role-badge gov">Data Quality</span></td>
+                        <td>Laurent Girardeau Montaut</td>
+                        <td>Data Quality Project Owner - Framework qualité & outils</td>
+                    </tr>
+                    <tr>
+                        <td><span class="role-badge tech">Architecture</span></td>
+                        <td>Thomas (Chapter Lead)</td>
+                        <td>Data Architect Chapter Lead - 14 architectes monde</td>
+                    </tr>
+                    <tr>
+                        <td><span class="role-badge tech">Architecture</span></td>
+                        <td>Shaïma</td>
+                        <td>Data Architect Corporate - Ex Tech Lead Analytics, 3.5 ans chez PR</td>
+                    </tr>
+                    <tr>
+                        <td><span class="role-badge tech">Architecture</span></td>
+                        <td>Raphaël</td>
+                        <td>Data Architect - Ex Data Hub, équipe Finance puis Corporate</td>
+                    </tr>
+                    <tr>
+                        <td><span class="role-badge tech">Platform</span></td>
+                        <td>Tania</td>
+                        <td>Équipe Data Platform Codex</td>
+                    </tr>
+                    <tr>
+                        <td><span class="role-badge business">Analytics</span></td>
+                        <td>Romain Vionnet, Marie Agrappard</td>
+                        <td>Équipe Analytics (à confirmer)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 3: ACTUAL STATE -->
+        <section id="actual">
+            <h2 class="section-title">⚠️ État Actuel & Points de Friction</h2>
+
+            <h3 class="subsection-title">1️⃣ Fragmentation de la Data Quality</h3>
+            <div class="issue-box critical">
+                <strong>Problème :</strong> La qualité des données est gérée en silos avec des scripts ad-hoc, des procédures stockées isolées et des tests dbt disparates. Pas de framework commun ni de responsabilités clairement établies entre ingestion, transformation et data stewardship.<br><br>
+                <strong>Impact :</strong> Chaque équipe a ses propres pratiques - certaines ont monté un lineage "maison" (ex: équipe KTP), d'autres font du profiling technique minimal. Les règles métier ne sont pas appliquées de manière systématique.<br><br>
+                <strong>Risque :</strong> Si non standardisé maintenant, les problèmes de qualité vont se propager à l'échelle globale via le projet LEAP.
+            </div>
+
+            <h3 class="subsection-title">2️⃣ Manque de Visibilité FinOps</h3>
+            <div class="issue-box critical">
+                <strong>Problème :</strong> Coûts globaux Snowflake connus, mais impossible de dire combien coûte chaque Data Product individuellement.<br><br>
+                <strong>Impact :</strong> Pas de capacité à évaluer si le ROI d'un Data Product justifie son coût, ni à identifier les pipelines inefficaces.<br><br>
+                <strong>Besoin :</strong> TCO par Data Product pour poser les bonnes questions sur l'alignement coût/valeur métier.
+            </div>
+
+            <h3 class="subsection-title">3️⃣ Data Lineage Incomplet</h3>
+            <div class="issue-box">
+                <strong>Deux niveaux identifiés :</strong><br>
+                • <strong>Macro (fonctionnel) :</strong> Comment les Data Products s'interfacent entre eux par domaine métier<br>
+                • <strong>Micro (technique) :</strong> Comment chaque table interagit avec les autres à l'intérieur d'un Data Product<br><br>
+                <strong>État actuel :</strong> Le lineage micro/technique n'existe pas de manière unifiée. Certaines équipes ont des solutions maison.<br><br>
+                <strong>Impact :</strong> Difficulté à analyser les impacts en cascade, debugging complexe, pas de root cause analysis rapide.
+            </div>
+
+            <h3 class="subsection-title">4️⃣ Gouvernance IA/ML Non Adressée</h3>
+            <div class="issue-box">
+                <strong>Constat :</strong> La gouvernance technique, le FinOps et le lineage sont identifiés comme les 3 piliers prioritaires, mais la partie IA/ML reste un chantier ouvert.<br><br>
+                <strong>Opportunité :</strong> dbt peut servir de fondation pour les initiatives IA/ML grâce à la Semantic Layer et aux Data Contracts.
+            </div>
+
+            <h3 class="subsection-title">Comparaison État Actuel vs Cible</h3>
+            <div class="comparison-container">
+                <div class="before">
+                    <h4>❌ Aujourd'hui</h4>
+                    <div class="metric">
+                        <span class="metric-icon">🧪</span>
+                        <span><strong>Tests :</strong> Disparates selon les équipes, pas de standard</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">📊</span>
+                        <span><strong>FinOps :</strong> Coûts globaux uniquement, pas de TCO par produit</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">🔍</span>
+                        <span><strong>Lineage :</strong> Solutions maison isolées (ex: KTP)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">📚</span>
+                        <span><strong>Documentation :</strong> Non synchronisée avec le code</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">⚙️</span>
+                        <span><strong>Orchestration :</strong> ADF + scripts custom</span>
+                    </div>
+                </div>
+
+                <div class="after">
+                    <h4>✅ Avec dbt Cloud</h4>
+                    <div class="metric">
+                        <span class="metric-icon">✓</span>
+                        <span><strong>Tests :</strong> Framework unifié, Copilot pour génération auto</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">💰</span>
+                        <span><strong>FinOps :</strong> Attribution des coûts par Data Product</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">🔗</span>
+                        <span><strong>Lineage :</strong> Visualisation native end-to-end</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">📖</span>
+                        <span><strong>Documentation :</strong> Auto-générée, toujours à jour</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-icon">⚡</span>
+                        <span><strong>Orchestration :</strong> Smart Execution, intégration ADF native</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: FUTURE STATE -->
+        <section id="future">
+            <h2 class="section-title">🚀 État Cible avec dbt Platform</h2>
+
+            <h3 class="subsection-title">Les 3 Piliers de Valeur pour Pernod Ricard</h3>
+            <div class="card-grid">
+                <div class="card" style="border-left: 4px solid #fd6603;">
+                    <h3>1️⃣ Normaliser la Qualité à l'Échelle</h3>
+                    <p>Mettre en place un <strong>framework de tests unique</strong> couvrant les couches Bronze, Silver, Gold de chaque Data Product.</p>
+                    <ul style="margin-top: 15px;">
+                        <li><strong>dbt Copilot :</strong> Génération automatique des tests de base depuis les modèles existants</li>
+                        <li><strong>Tests visibles par les Data Stewards :</strong> Pas uniquement pour les équipes techniques</li>
+                        <li><strong>Score de confiance :</strong> Indicateur de qualité exposé aux métiers</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #fd6603;">
+                    <h3>2️⃣ Industrialiser le Delivery sur Snowflake</h3>
+                    <p>Offrir aux squads un <strong>IDE unifié</strong> (dbt Cloud) avec intégration Git, CI/CD native et déploiement sécurisé.</p>
+                    <ul style="margin-top: 15px;">
+                        <li><strong>Smart Execution :</strong> Ne rafraîchir que ce qui a changé (économies compute 15-60%)</li>
+                        <li><strong>Merge validation :</strong> Tests automatiques avant chaque mise en production</li>
+                        <li><strong>Intégration ADF :</strong> Orchestration hybride compatible avec l'existant</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #fd6603;">
+                    <h3>3️⃣ Visibilité End-to-End</h3>
+                    <p>Exploiter le <strong>DAG et le lineage</strong> comme source de vérité pour la transformation data.</p>
+                    <ul style="margin-top: 15px;">
+                        <li><strong>Lineage unifié :</strong> Vision claire des impacts par Data Product</li>
+                        <li><strong>Catalogue :</strong> Exposition par définition métier, par owner</li>
+                        <li><strong>Semantic Layer :</strong> Définitions de métriques cohérentes cross-équipes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Processus de Création Data Product : Avant vs Après</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
+                <div>
+                    <h4 style="color: #d32f2f; margin-bottom: 25px; font-size: 1.1em; padding: 15px; background: #fce4ec; border-radius: 6px; text-align: center;">❌ Processus Actuel</h4>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #d32f2f; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #d32f2f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Besoin métier identifié</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">PO, PM et Archi définissent l'architecture</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #d32f2f; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #d32f2f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Développement</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">dbt Core (70%) ou Proc Stockées (30%) selon complexité</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #d32f2f; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #d32f2f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Tests disparates</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Chaque équipe fait "à sa sauce"</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #d32f2f; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #d32f2f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">4</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Gouvernance manuelle</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Travail avec équipe Data Governance pour cataloguer</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #d32f2f; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #d32f2f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">5</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Pas de visibilité coûts</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Impossible de savoir le TCO du Data Product</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="color: #2e7d32; margin-bottom: 25px; font-size: 1.1em; padding: 15px; background: #e8f5e9; border-radius: 6px; text-align: center;">✅ Processus Modernisé (dbt Cloud)</h4>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2e7d32; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #2e7d32; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Besoin métier identifié</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Idem - Architecture validée en comité Leadership</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2e7d32; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #2e7d32; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Développement dans dbt Cloud IDE</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Version control Git natif, preview instantané</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2e7d32; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #2e7d32; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Tests auto-générés + Copilot</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">80% des tests créés automatiquement, 20% règles métier</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2e7d32; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #2e7d32; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">4</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Docs & Catalogue auto</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Documentation synchronisée avec le code, lineage visuel</p>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2e7d32; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background: #2e7d32; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">5</div>
+                                <span style="font-weight: 600; color: #2c3e50;">Coûts trackés automatiquement</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-left: 47px;">Attribution par Data Product, alertes sur anomalies</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Alignement avec la Vision Data Product</h3>
+            <div class="highlight-box">
+                <h4>dbt Cloud s'intègre parfaitement dans votre architecture</h4>
+                <p>Chaque Data Product (Source Align, Data Hub, Use Case Align) peut avoir son propre projet dbt avec :</p>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Tests dédiés :</strong> Validation de la qualité à chaque couche (Bronze → Silver → Gold interne)</li>
+                    <li><strong>Documentation isolée :</strong> Catalogue par Data Product avec owners identifiés</li>
+                    <li><strong>Coûts séparés :</strong> Visibilité FinOps par Data Product</li>
+                    <li><strong>Lineage cloisonné :</strong> Pas de dépendances non maîtrisées entre produits</li>
+                </ul>
+            </div>
+
+            <div class="issue-box" style="background: #e3f2fd; border-left-color: #1565c0;">
+                <strong>⚠️ Point d'Attention : Couche Sémantique</strong><br><br>
+                Pernod Ricard évalue actuellement plusieurs options pour la couche sémantique (Snowflake, dbt, Power BI). <strong>Recommandation forte :</strong> ne faire la couche sémantique qu'à UN seul endroit pour éviter de perdre l'unification recherchée. Si vous la faites sur Snowflake, gardez-la uniquement sur Snowflake. Des POC sont en cours pour comparer les solutions.
+            </div>
+        </section>
+
+        <!-- SECTION 5: SOLUTION -->
+        <section id="solution">
+            <h2 class="section-title">🔧 Solution dbt Cloud</h2>
+
+            <div class="highlight-box">
+                <h4>Pourquoi dbt Cloud vs dbt Core ?</h4>
+                <p>Pernod Ricard utilise déjà dbt Core avec succès. La migration vers dbt Cloud apporte <strong>l'industrialisation</strong> nécessaire pour une communauté de 100+ data engineers et des dizaines de Data Products.</p>
+            </div>
+
+            <h3 class="subsection-title">Réponse aux Besoins Exprimés</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Besoin Pernod Ricard</th>
+                        <th>Fonctionnalité dbt Cloud</th>
+                        <th>Bénéfice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Profiling de la donnée</strong></td>
+                        <td>dbt Copilot + Tests automatiques</td>
+                        <td>Compréhension immédiate des données sources</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Observation du cycle de vie</strong></td>
+                        <td>Data Lineage interactif</td>
+                        <td>Suivi de la donnée de l'ingestion à l'archivage</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monitoring & Alerting</strong></td>
+                        <td>dbt Cloud Jobs + Notifications</td>
+                        <td>Prévenir les équipes en amont des problèmes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Score de confiance</strong></td>
+                        <td>Test coverage + Freshness checks</td>
+                        <td>Indicateur visible pour les métiers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TCO par Data Product</strong></td>
+                        <td>Cost attribution & Analytics</td>
+                        <td>ROI mesurable par produit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Lineage technique</strong></td>
+                        <td>DAG Explorer</td>
+                        <td>Debug en 2 clics, impact analysis</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="subsection-title">Fonctionnalités Clés pour Pernod Ricard</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🤖 dbt Copilot</h3>
+                    <p>IA intégrée qui génère automatiquement les tests et la documentation depuis vos modèles existants.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li>Ne s'entraîne PAS sur vos données (metadata uniquement)</li>
+                        <li>Transcription des règles métier en YAML</li>
+                        <li>Mise à jour automatique des fichiers de tests</li>
+                    </ul>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 10px;"><em>Note : Copilot dbt ≠ GitHub Copilot, c'est un outil distinct intégré à la plateforme</em></p>
+                </div>
+
+                <div class="card">
+                    <h3>💻 IDE Web & CLI</h3>
+                    <p>Deux options de développement pour s'adapter à tous les profils.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li><strong>IDE Web (Studio) :</strong> Rien à installer, connexion par email/SSO, idéal pour les externes</li>
+                        <li><strong>CLI :</strong> Connexion de VS Code/Cursor au projet dbt Cloud pour les devs expérimentés</li>
+                        <li>Mises à jour automatiques de l'engine, pas de problèmes de versions</li>
+                    </ul>
+                    <p style="color: #2e7d32; font-size: 0.9em; margin-top: 10px;"><strong>→ Gain majeur pour l'onboarding des 50-70% de consultants externes</strong></p>
+                </div>
+
+                <div class="card">
+                    <h3>⚡ Smart Execution (State-Aware)</h3>
+                    <p>Optimisation automatique des runs pour ne rafraîchir que ce qui a changé.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li><strong>~29% d'économies</strong> en moyenne constatées</li>
+                        <li>Réutilisation des modèles ET des résultats de tests</li>
+                        <li>Activation en un clic dans les settings du job</li>
+                        <li>Disponible avec dbt Fusion</li>
+                    </ul>
+                    <p style="color: #2e7d32; font-size: 0.9em; margin-top: 10px;"><strong>→ "Rien qu'en activant ça, vous auto-payez la solution vu le nombre de modèles que vous gérez"</strong></p>
+                </div>
+
+                <div class="card">
+                    <h3>🔗 dbt Mesh & Cross-Database</h3>
+                    <p>Travail cross-projets et cross-bases de données sans perdre le découplage.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li>Référencer des modèles d'autres projets Git comme sources</li>
+                        <li>Supporter plusieurs bases (Snowflake + BigQuery par ex.)</li>
+                        <li>Chaque projet reste indépendant dans son orchestration</li>
+                        <li>Triggers inter-projets configurables avec Fusion</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>🔗 Intégration Azure/Snowflake</h3>
+                    <p>Compatible avec votre stack existante sans disruption.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li>Orchestration hybride avec ADF</li>
+                        <li>Disponible sur Snowflake Marketplace</li>
+                        <li>Utilisation possible des crédits Snowflake</li>
+                        <li><strong>Aucune donnée stockée par dbt</strong> - tout reste sur Snowflake</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Semantic Layer</h3>
+                    <p>Définition centralisée des métriques métier accessible à tous les outils.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li>Cohérence des KPIs cross-équipes</li>
+                        <li>Self-service pour Power BI</li>
+                        <li>Single source of truth</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>🔍 Data Lineage Multi-Niveau</h3>
+                    <p>Visualisation interactive du flux de données à tous les niveaux.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li><strong>Niveau macro :</strong> Relations entre Data Products et projets</li>
+                        <li><strong>Niveau micro :</strong> Tables et transformations</li>
+                        <li><strong>Niveau colonne :</strong> Dépendances colonne par colonne avec type de transformation (rename, passthrough, transform)</li>
+                        <li>Impact analysis et statut des derniers runs directement dans le DAG</li>
+                    </ul>
+                    <p style="color: #2e7d32; font-size: 0.9em; margin-top: 10px;"><strong>→ "Évite de tout casser un vendredi après-midi parce qu'on n'avait pas vu les dépendances"</strong></p>
+                </div>
+
+                <div class="card">
+                    <h3>📖 Catalogue & Documentation</h3>
+                    <p>Documentation auto-générée et toujours synchronisée avec le code.</p>
+                    <ul style="margin-left: 0; margin-top: 12px;">
+                        <li>Portal de documentation déployé</li>
+                        <li>Descriptions et metadata par owner</li>
+                        <li>Recherche full-text</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Fonctionnalités Démontrées (28/01)</h3>
+            <div class="card-grid">
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ Health Check intégré aux Dashboards</h3>
+                    <p>iframe de statut de fraîcheur et qualité des données directement visible dans les dashboards Power BI/Tableau.</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ Renforce la confiance métier dans les data products</p>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ Column-Level Lineage</h3>
+                    <p>Visualisation des dépendances au niveau des colonnes, pas seulement des tables. Identification du type de transformation (rename, passthrough, transform).</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ Évite les erreurs en cascade lors des modifications</p>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ dbt Copilot - Génération de tests</h3>
+                    <p>IA intégrée capable de suggérer et mettre à jour les tests YAML automatiquement depuis l'IDE.</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ Accélère la couverture de tests x10</p>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ Compare (Run Artifacts)</h3>
+                    <p>Comparaison des données entre le run précédent et le nouveau avant merge. Visualisation des changements induits par le code.</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ Validation avant mise en production</p>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ State-Aware Orchestration</h3>
+                    <p>Réutilisation automatique des résultats des runs précédents si ni le code ni les données source n'ont changé.</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ ~29% d'économies compute en moyenne</p>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #2e7d32;">
+                    <h3>✅ dbt Mesh (Cross-Project)</h3>
+                    <p>Capacité à référencer des modèles d'autres projets Git comme sources, tout en gardant les projets découplés.</p>
+                    <p style="color: #2e7d32; font-weight: 600; margin-top: 10px;">→ Réutilisabilité du code, évite les duplications</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Questions Techniques Soulevées</h3>
+            <div class="issue-box">
+                <strong>🔍 Question de Thomas : Orchestration Cross-Project avec dbt Mesh</strong><br><br>
+                <em>"Comment s'assurer que quand un job d'un projet finit, ça déclenche bien les jobs dépendants dans d'autres projets sans créer de couplage fort ?"</em><br><br>
+                <strong>Réponse :</strong> Avec dbt Fusion, il est possible de définir des triggers inter-projets directement dans la configuration des jobs. Un job peut avoir comme condition le succès d'un job d'un autre projet avant de s'exécuter. L'orchestration intelligente de Fusion crée une "super query" qui comprend les dépendances cross-projets.
+            </div>
+
+            <div class="issue-box">
+                <strong>🔍 Question de Shaïma : Rollback des modèles</strong><br><br>
+                <em>"Est-ce qu'on peut faire une marche arrière si les tests échouent après un build ?"</em><br><br>
+                <strong>Réponse :</strong> Oui, le versioning permet le rollback sur le code (Git) et sur les données (stratégies de snapshot pour garder N-1). À noter : le rollback données double les coûts de stockage, donc à réserver aux données critiques.
+            </div>
+
+            <div class="issue-box">
+                <strong>🔍 Question de Shaïma : Déploiement de la documentation</strong><br><br>
+                <em>"Avec Core, on avait un HTML à déployer manuellement. C'est plus simple avec Cloud ?"</em><br><br>
+                <strong>Réponse :</strong> Oui, toute la métadonnée est structurée et accessible par API. Le catalogue est automatiquement mis à jour et peut enrichir un catalogue entreprise externe.
+            </div>
+
+            <div class="issue-box">
+                <strong>🔍 Question de Raphaël : Impact sur les coûts Snowflake</strong><br><br>
+                <em>"Si les DE font tourner leurs tests à profusion, ça peut faire exploser les coûts Snowflake ?"</em><br><br>
+                <strong>Réponse :</strong> Les jobs ne sont exécutés que selon le schedule défini (ex: toutes les 12h) ou sur trigger de PR. Ce n'est pas du compute continu. De plus, l'orchestration intelligente réutilise les résultats précédents quand rien n'a changé.
+            </div>
+            <div class="architecture-box">
+                <div class="architecture-flow">
+                    <div class="arch-block source">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">📥</div>
+                        Sources
+                        <div style="font-size: 0.75em; opacity: 0.9;">SAP, CRM, JDE...</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block source">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">⚙️</div>
+                        Ingestion
+                        <div style="font-size: 0.75em; opacity: 0.9;">Proc Snowflake</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block transform">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">🔄</div>
+                        dbt Cloud
+                        <div style="font-size: 0.75em; opacity: 0.9;">Transform + Tests</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">❄️</div>
+                        Snowflake
+                        <div style="font-size: 0.75em; opacity: 0.9;">Codex</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block consume">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">📊</div>
+                        Power BI
+                        <div style="font-size: 0.75em; opacity: 0.9;">Reporting</div>
+                    </div>
+                </div>
+                <p style="margin-top: 20px; color: #666; text-align: center;">Orchestration : Azure Data Factory avec intégration native dbt Cloud API</p>
+            </div>
+        </section>
+
+        <!-- SECTION 6: ROI -->
+        <section id="roi">
+            <h2 class="section-title">💰 Évaluation ROI</h2>
+
+            <h3 class="subsection-title">Proposition : Business Value Assessment</h3>
+            <div class="highlight-box">
+                <h4>Quantifier les Gains Avant de Décider</h4>
+                <p>Nous proposons de réaliser un <strong>Business Value Assessment</strong> avec vos équipes pour mesurer précisément :</p>
+                <ul style="margin-top: 15px;">
+                    <li>Le coût actuel de l'orchestration et de la gestion de dbt Core</li>
+                    <li>Le temps passé en debugging, tests manuels, documentation</li>
+                    <li>Les économies compute potentielles via Smart Execution</li>
+                    <li>Le ROI projeté sur 12-24 mois</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">Axes de Gains Identifiés</h3>
+            <div class="roi-metrics">
+                <div class="roi-card">
+                    <div class="label">Réduction Compute Snowflake</div>
+                    <div class="value">~29%</div>
+                    <div class="label">moyenne avec Smart Execution</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Temps de Debugging</div>
+                    <div class="value">3h → 10-30min</div>
+                    <div class="label">grâce au lineage visuel</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Productivité Équipes</div>
+                    <div class="value">+20-30%</div>
+                    <div class="label">onboarding & développement</div>
+                </div>
+                <div class="roi-card">
+                    <div class="label">Onboarding Consultants</div>
+                    <div class="value">Accéléré</div>
+                    <div class="label">IDE web, rien à installer</div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Comparaison TCO : dbt Core vs dbt Cloud</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Poste de Coût</th>
+                        <th>dbt Core (Actuel)</th>
+                        <th>dbt Cloud</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Licence</strong></td>
+                        <td>Gratuit (open source)</td>
+                        <td>Par utilisateur développeur</td>
+                        <td>Coût direct</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Infrastructure orchestration</strong></td>
+                        <td>ADF + scripts custom + maintenance</td>
+                        <td>Inclus dans dbt Cloud</td>
+                        <td>Économie infra</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compute Snowflake</strong></td>
+                        <td>100% des runs</td>
+                        <td>40-85% (Smart Execution)</td>
+                        <td>Économie majeure</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Temps ingénieur (debugging)</strong></td>
+                        <td>45-60 min par incident</td>
+                        <td>5-15 min par incident</td>
+                        <td>Productivité</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Documentation</strong></td>
+                        <td>Effort manuel continu</td>
+                        <td>Auto-générée</td>
+                        <td>Productivité</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Formation nouveaux arrivants</strong></td>
+                        <td>Semaines</td>
+                        <td>Jours (UI intuitive + docs)</td>
+                        <td>Time-to-value</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="issue-box success">
+                <strong>Point Clé FinOps :</strong> En période de restructuration où les coûts sont un driver principal, la Smart Execution de dbt Cloud permet des économies immédiates et mesurables sur la facture Snowflake. Les clients qui l'activent mesurent entre 15% et plus de 60% de réduction selon la fréquence de refresh et la complexité des pipelines.
+            </div>
+        </section>
+
+        <!-- SECTION 7: CASES -->
+        <section id="cases">
+            <h2 class="section-title">📚 Références Clients</h2>
+
+            <h3 class="subsection-title">Cas Client : TF1</h3>
+            <div class="case-study">
+                <h4>📺 TF1 - Transformation Data avec dbt</h4>
+                <p>TF1 a adopté dbt pour industrialiser ses pipelines de données et améliorer la qualité de ses analyses audience.</p>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="value">+25%</div>
+                        <span>Gain de productivité</span>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value">-99%</div>
+                        <span>Réduction des incidents qualité</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Industrie CPG/Retail - Cas Similaires</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🛒 Industrie CPG</h3>
+                    <p>Plusieurs groupes de grande consommation utilisent dbt pour :</p>
+                    <ul style="margin-top: 10px;">
+                        <li>Harmonisation des données multi-marques post-acquisition</li>
+                        <li>Unification des métriques supply chain</li>
+                        <li>Gouvernance des données marketing</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🏭 Manufacturing</h3>
+                    <p>Transformation des données industrielles avec dbt :</p>
+                    <ul style="margin-top: 10px;">
+                        <li>Traçabilité end-to-end</li>
+                        <li>Qualité des données ERP</li>
+                        <li>Reporting financier consolidé</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Disponibilité sur Snowflake Marketplace</h4>
+                <p>dbt Labs est disponible sur la <strong>Snowflake Marketplace</strong>. Si Pernod Ricard dispose de crédits Snowflake non utilisés, ils peuvent être appliqués à la licence dbt Cloud, simplifiant ainsi la gestion budgétaire.</p>
+            </div>
+        </section>
+
+        <!-- SECTION 8: ROADMAP -->
+        <section id="roadmap">
+            <h2 class="section-title">🗺️ Feuille de Route Proposée</h2>
+
+            <h3 class="subsection-title">Approche Recommandée</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Phase 1 : Business Value Assessment (2-3 semaines)</h4>
+                        <p><strong>Objectif :</strong> Quantifier les gains et construire le business case</p>
+                        <ul style="margin-top: 10px;">
+                            <li>Analyse des coûts actuels (orchestration, compute, debugging)</li>
+                            <li>Mapping des Data Products prioritaires</li>
+                            <li>Projection ROI sur 12-24 mois</li>
+                            <li>Livrable : Business case chiffré pour validation interne</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Phase 2 : Pilote sur un Data Product (4-6 semaines)</h4>
+                        <p><strong>Objectif :</strong> Valider la faisabilité technique et les gains</p>
+                        <ul style="margin-top: 10px;">
+                            <li>Sélection d'un Data Product prioritaire (ex: CRM dans LEAP)</li>
+                            <li>Migration vers dbt Cloud avec tests et documentation</li>
+                            <li>Mesure des gains (compute, temps debugging, couverture tests)</li>
+                            <li>Formation de l'équipe pilote</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Phase 3 : Déploiement Guidelines (2-3 mois)</h4>
+                        <p><strong>Objectif :</strong> Standardiser via les Chapters</p>
+                        <ul style="margin-top: 10px;">
+                            <li>Définition des guidelines de tests par les Chapters Archi/DataArch</li>
+                            <li>Templates de Data Products avec qualité intégrée</li>
+                            <li>Formation des Data Engineers des autres squads</li>
+                            <li>Rollout progressif par domaine métier</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Phase 4 : Industrialisation (6-12 mois)</h4>
+                        <p><strong>Objectif :</strong> Couverture complète Codex</p>
+                        <ul style="margin-top: 10px;">
+                            <li>Migration de tous les Data Products vers dbt Cloud</li>
+                            <li>Activation Smart Execution globale</li>
+                            <li>Semantic Layer pour métriques unifiées</li>
+                            <li>Score de confiance exposé aux métiers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Prochaines Étapes Immédiates</h3>
+            <div class="card-grid">
+                <div class="card" style="border-top: 4px solid #2e7d32;">
+                    <h3>✅ Démo Technique (Réalisée)</h3>
+                    <p><strong>Date :</strong> Mardi 28 Janvier 2025</p>
+                    <p><strong>Participants :</strong> Thomas, Shaïma, Raphaël (Architectes)</p>
+                    <p><strong>Statut :</strong> Démo complète réalisée - Enregistrement disponible</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #fd6603;">
+                    <h3>📅 Debrief & Modèle de Coût</h3>
+                    <p><strong>Date :</strong> Lundi 3 Février 2025, 10h</p>
+                    <p><strong>Objectif :</strong> Débriefer la démo, expliquer le modèle de pricing</p>
+                    <p><strong>Participants :</strong> Thomas, Shaïma, Raphaël + Nicolas/Charlotte</p>
+                </div>
+                <div class="card">
+                    <h3>📊 Business Value Assessment</h3>
+                    <p><strong>Proposition :</strong> À planifier après le debrief si intérêt confirmé</p>
+                    <p><strong>Livrable :</strong> TCO comparatif Core vs Cloud + projection ROI personnalisée</p>
+                    <p><strong>Durée :</strong> 2-3 semaines</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Contacts dbt Labs France</h4>
+                <p><strong>Nicolas</strong> - Account Executive (depuis octobre 2024)</p>
+                <p><strong>Charlotte</strong> - Solutions Architect</p>
+                <p><strong>Aurélien Garcia</strong> - Sales Development (France & Espagne)</p>
+                <p style="margin-top: 15px;"><em>Nous pouvons également organiser une visite dans vos bureaux à Saint-Lazare pour la prochaine session.</em></p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function showSection(event, sectionId) {
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active class to clicked link
+            if (event && event.target) {
+                event.target.closest('.nav-link').classList.add('active');
+            }
+            
+            // Hide all sections
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Scroll to top of main content
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize first section as active
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection(null, 'executive');
+            document.querySelector('.nav-link').classList.add('active');
+        });
+    </script>
+</body>
+</html>
